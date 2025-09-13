@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Document Tracker — Security Questions</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 12px; background: linear-gradient(to right,#e0f7fa,#f1f8e9); }
+    h2 { color:#2e7d32; text-align:center; }
+    .box { background:#fff; padding:14px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin:12px auto; max-width:980px; }
+    input, button, select { padding:10px; margin:6px 0; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box; }
+    .row { display:flex; gap:8px; }
+    .row input { flex:1; }
+    .row button { flex:1; background:#2e7d32; color:white; border:none; cursor:pointer; border-radius:6px; }
+    button.primary{ background:#2e7d32; color:white; border:none; cursor:pointer; }
+    button.warn{ background:#d84315; color:white; border:none; cursor:pointer; }
+    button.orange{ background:#f57f17; color:white; border:none; cursor:pointer; }
+    table{ width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td{ border:1px solid #ccc; padding:8px; text-align:left; vertical-align:top; }
+    th{ background:#81c784; color:#fff; }
+    @media (max-width:768px){ .row{ flex-direction:column } }
+    .small { font-size:13px; color:#555; }
+    .adminBox { margin-top:12px; padding:10px; border-radius:8px; background:#f1f8e9; }
+    .muted { color:#666; font-size:13px; }
+  </style>
+</head>
+<body>
+
+  <h2>📂 Document Tracking System</h2>
+
+  <!-- LOGIN / REGISTER -->
+  <div id="loginBox" class="box">
+    <h3>🔐 Login or Register</h3>
+    <input id="inputName" placeholder="Full name (case-insensitive)" />
+    <input id="inputPassword" type="password" placeholder="Password" />
+    <div class="row">
+      <button class="primary" onclick="login()">Login</button>
+      <button onclick="showRegister()">Register</button>
+      <button onclick="showForgot()">Forgot Password</button>
+      <button class="warn" onclick="adminFullReset()" title="Admin use: clear everything">Full App Reset</button>
+    </div>
+    <p class="small">If you're admin (Romulo), register/login with name exactly: <b>ROMULO J. JACINTO JR</b> to see Admin tools.</p>
+    <p id="loginMsg" class="small" style="color:crimson"></p>
+  </div>
+
+  <!-- REGISTER (with 3 security questions) -->
+  <div id="registerBox" class="box" style="display:none;">
+    <h3>📝 Register — choose 3 security questions</h3>
+    <input id="regName" placeholder="Full name (case-insensitive)" />
+    <input id="regPassword" type="password" placeholder="Choose a password" />
+    <p class="muted">Pick three different questions and provide answers. These will be required to reset your password.</p>
+
+    <label>Question 1</label>
+    <select id="q1">
+      <option value="">-- choose a question --</option>
+      <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+      <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+      <option value="What city were you born in?">What city were you born in?</option>
+      <option value="What is your favorite teacher's name?">What is your favorite teacher's name?</option>
+      <option value="What was the make of your first car?">What was the make of your first car?</option>
+    </select>
+    <input id="a1" placeholder="Answer 1" />
+
+    <label>Question 2</label>
+    <select id="q2">
+      <option value="">-- choose a question --</option>
+      <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+      <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+      <option value="What city were you born in?">What city were you born in?</option>
+      <option value="What is your favorite teacher's name?">What is your favorite teacher's name?</option>
+      <option value="What was the make of your first car?">What was the make of your first car?</option>
+    </select>
+    <input id="a2" placeholder="Answer 2" />
+
+    <label>Question 3</label>
+    <select id="q3">
+      <option value="">-- choose a question --</option>
+      <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+      <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+      <option value="What city were you born in?">What city were you born in?</option>
+      <option value="What is your favorite teacher's name?">What is your favorite teacher's name?</option>
+      <option value="What was the make of your first car?">What was the make of your first car?</option>
+    </select>
+    <input id="a3" placeholder="Answer 3" />
+
+    <div class="row">
+      <button onclick="registerUser()">Create Account</button>
+      <button onclick="cancelRegister()">Cancel</button>
+    </div>
+    <p id="regMsg" class="small" style="color:crimson"></p>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <div id="forgotBox" class="box" style="display:none;">
+    <h3>🔐 Forgot Password — answer your security questions</h3>
+    <div id="forgotStep1">
+      <input id="forgotName" placeholder="Enter your full name" />
+      <button onclick="startForgot()">Next</button>
+      <button onclick="cancelForgot()">Cancel</button>
+      <p id="forgotMsg" class="small" style="color:crimson"></p>
+    </div>
+
+    <div id="forgotStep2" style="display:none;">
+      <p id="fq1"></p>
+      <input id="fq1a" placeholder="Answer question 1" />
+      <p id="fq2"></p>
+      <input id="fq2a" placeholder="Answer question 2" />
+      <p id="fq3"></p>
+      <input id="fq3a" placeholder="Answer question 3" />
+      <div class="row">
+        <button onclick="verifySecurityAnswers()">Verify Answers</button>
+        <button onclick="cancelForgot()">Cancel</button>
+      </div>
+      <p id="forgotVerifyMsg" class="small" style="color:crimson"></p>
+    </div>
+
+    <div id="forgotStep3" style="display:none;">
+      <input id="forgotNewPass" type="password" placeholder="Enter new password" />
+      <input id="forgotNewPass2" type="password" placeholder="Confirm new password" />
+      <div class="row">
+        <button onclick="saveForgotNewPassword()">Save Password</button>
+        <button onclick="cancelForgot()">Cancel</button>
+      </div>
+      <p id="forgotSaveMsg" class="small" style="color:crimson"></p>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appBox" class="box" style="display:none;">
+    <p id="welcome" style="font-weight:bold"></p>
+    <div class="row">
+      <button class="warn" id="logoutBtn" onclick="logout()">Logout</button>
+      <button class="orange" onclick="promptActivate()">🔑 Activate Full Version</button>
+      <button onclick="showResetUserConfirm()">🔄 Reset This User</button>
+    </div>
+
+    <p id="freeInfo" class="small" style="margin-top:8px; font-weight:bold; color:#d32f2f"></p>
+
+    <!-- form -->
+    <form id="trackerForm" style="margin-top:12px;">
+      <input type="hidden" id="editIndex" value="">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input id="dateTransmitted" type="date" required>
+        <input id="personName" placeholder="Name of Person" required>
+        <input id="title" placeholder="Title / Subject" required style="flex:2">
+        <input id="dateReceived" type="date">
+        <input id="remarks" placeholder="Remarks" style="flex:2">
+      </div>
+      <div style="margin-top:8px;">
+        <button class="primary" type="submit">Save Record</button>
+      </div>
+    </form>
+
+    <!-- search -->
+    <div style="margin-top:8px" class="small">
+      <label>🔎 Filter</label>
+      <input id="searchBox" placeholder="Search name / title / remarks">
+    </div>
+
+    <!-- active records -->
+    <h4 style="margin-top:12px">📋 Active Records</h4>
+    <table id="activeTable"><thead><tr>
+      <th>Date Transmitted</th><th>Name</th><th>Title/Subject</th><th>Date Received/Returned</th><th>Remarks</th><th>Actions</th>
+    </tr></thead><tbody></tbody></table>
+
+    <!-- archived -->
+    <h4 style="margin-top:12px">🗄 Archived Records</h4>
+    <table id="archivedTable"><thead><tr>
+      <th>Date Transmitted</th><th>Name</th><th>Title/Subject</th><th>Date Received/Returned</th><th>Remarks</th><th>Actions</th>
+    </tr></thead><tbody></tbody></table>
+
+    <!-- ADMIN TOOLS -->
+    <div id="adminTools" class="adminBox" style="display:none;">
+      <h4>🔧 Admin Tools</h4>
+      <input id="adminTargetName" placeholder="Enter target user's full name" />
+      <div class="row" style="margin-top:6px;">
+        <button onclick="generateAndShowKey()">Generate Key</button>
+        <button onclick="exportUserData()">Export This User Data</button>
+      </div>
+      <p id="adminKeyOutput" style="font-weight:bold; color:#1976d2"></p>
+    </div>
+  </div>
+
+  <footer style="text-align:center; margin-top:18px" class="small">
+    © 2025 Developed by Romulo J. Jacinto Jr.
+  </footer>
+
+<script>
+/* helpers */
+function hashString(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(16);}
+function loadUsers(){return JSON.parse(localStorage.getItem('users')||'{}');}
+function saveUsers(u){localStorage.setItem('users', JSON.stringify(u));}
+function storageKey(key){return `${key}_${currentUser}`;}
+function generateActivationKey(name){let str=name+"-ROMULO-SALT";let hash=0;for(let i=0;i<str.length;i++){hash=((hash<<5)-hash)+str.charCodeAt(i);hash|=0;}return "KEY-"+Math.abs(hash);}
+
+/* app state */
+let currentUser=null, records=[], archived=[], isFull=false;
+const TRIAL_LIMIT=3, ADMIN_NAME="ROMULO J. JACINTO JR";
+
+/* UI refs */
+const loginBox=document.getElementById('loginBox'), registerBox=document.getElementById('registerBox'), forgotBox=document.getElementById('forgotBox'), appBox=document.getElementById('appBox');
+const welcomeEl=document.getElementById('welcome'), freeInfo=document.getElementById('freeInfo');
+const activeTbody=document.querySelector('#activeTable tbody'), archivedTbody=document.querySelector('#archivedTable tbody');
+const loginMsg=document.getElementById('loginMsg'), regMsg=document.getElementById('regMsg'), forgotMsg=document.getElementById('forgotMsg');
+
+/* registration */
+function showRegister(){ loginBox.style.display='none'; registerBox.style.display='block'; regMsg.textContent=''; }
+function cancelRegister(){ registerBox.style.display='none'; loginBox.style.display='block'; regMsg.textContent=''; document.getElementById('regName').value=''; document.getElementById('regPassword').value=''; document.getElementById('q1').value=''; document.getElementById('q2').value=''; document.getElementById('q3').value=''; document.getElementById('a1').value=''; document.getElementById('a2').value=''; document.getElementById('a3').value=''; }
+
+function registerUser(){
+  const name = document.getElementById('regName').value.trim();
+  const pass = document.getElementById('regPassword').value;
+  const q1 = document.getElementById('q1').value;
+  const q2 = document.getElementById('q2').value;
+  const q3 = document.getElementById('q3').value;
+  const a1 = document.getElementById('a1').value.trim();
+  const a2 = document.getElementById('a2').value.trim();
+  const a3 = document.getElementById('a3').value.trim();
+  regMsg.textContent='';
+
+  if(!name || !pass || !q1 || !q2 || !q3 || !a1 || !a2 || !a3){ regMsg.textContent='Fill all fields and choose 3 questions.'; return; }
+  if(q1===q2 || q1===q3 || q2===q3){ regMsg.textContent='Choose three different questions.'; return; }
+
+  const U = name.toUpperCase();
+  const users = loadUsers();
+  if(users[U]){ regMsg.textContent='User already exists. Use Login.'; return; }
+
+  users[U] = {
+    passwordHash: hashString(pass),
+    created: Date.now(),
+    secQuestions: [q1,q2,q3],
+    secAnswersHash: [hashString(a1.toLowerCase()), hashString(a2.toLowerCase()), hashString(a3.toLowerCase())]
+  };
+  saveUsers(users);
+  regMsg.style.color='green';
+  regMsg.textContent = 'Registered! Now login.';
+  setTimeout(()=>{ cancelRegister(); }, 1000);
+}
+
+/* login */
+function login(){
+  const name = document.getElementById('inputName').value.trim();
+  const pass = document.getElementById('inputPassword').value;
+  loginMsg.textContent='';
+
+  if(!name || !pass){ loginMsg.textContent='Enter name and password.'; return; }
+  const U = name.toUpperCase();
+  const users = loadUsers();
+  if(!users[U]){ loginMsg.textContent='No such user. Please Register.'; return; }
+  if(users[U].passwordHash !== hashString(pass)){ loginMsg.textContent='Incorrect password.'; return; }
+
+  currentUser = U;
+  localStorage.setItem('docTrackerUser', currentUser);
+  records = JSON.parse(localStorage.getItem(storageKey('records')) || '[]');
+  archived = JSON.parse(localStorage.getItem(storageKey('archived')) || '[]');
+  isFull = JSON.parse(localStorage.getItem(storageKey('fullVersion')) || 'false');
+
+  // show UI
+  loginBox.style.display='none';
+  registerBox.style.display='none';
+  forgotBox.style.display='none';
+  appBox.style.display='block';
+  welcomeEl.textContent = `👤 Logged in as: ${currentUser}`;
+  document.getElementById('adminTools').style.display = (currentUser === ADMIN_NAME) ? 'block' : 'none';
+  renderAll();
+}
+
+/* logout */
+function logout(){
+  if(!confirm('Logout this account?')) return;
+  currentUser = null; records=[]; archived=[]; isFull=false;
+  appBox.style.display='none';
+  loginBox.style.display='block';
+  document.getElementById('inputPassword').value = '';
+  document.getElementById('inputName').value = '';
+}
+
+/* save/render */
+function saveAll(){ localStorage.setItem(storageKey('records'), JSON.stringify(records)); localStorage.setItem(storageKey('archived'), JSON.stringify(archived)); localStorage.setItem(storageKey('fullVersion'), JSON.stringify(isFull)); }
+function updateFreeInfo(){ if(isFull){ freeInfo.textContent='✅ Full version activated'; freeInfo.style.color='#2e7d32'; } else { const r=Math.max(0,TRIAL_LIMIT-records.length); freeInfo.textContent = r>0?`Trial: You can add ${r} more record(s).`:'⚠ Trial limit reached'; freeInfo.style.color='#d32f2f'; } }
+function renderAll(){ renderActive(records); renderArchived(archived); updateFreeInfo(); }
+function renderActive(d){ activeTbody.innerHTML=''; d.forEach((r,i)=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${r.dateTransmitted||''}</td><td>${r.personName||''}</td><td>${r.title||''}</td><td>${r.dateReceived||''}</td><td>${r.remarks||''}</td><td><button onclick="editRecord(${i})">Edit</button> <button onclick="deleteRecord(${i})">Delete</button> <button onclick="archiveRecord(${i})">Archive</button></td>`; activeTbody.appendChild(tr); }); }
+function renderArchived(d){ archivedTbody.innerHTML=''; d.forEach((r,i)=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${r.dateTransmitted||''}</td><td>${r.personName||''}</td><td>${r.title||''}</td><td>${r.dateReceived||''}</td><td>${r.remarks||''}</td><td><button onclick="restoreRecord(${i})">Restore</button> <button onclick="deleteArchived(${i})">Delete</button></td>`; archivedTbody.appendChild(tr); }); }
+
+/* form actions */
+document.getElementById('trackerForm').addEventListener('submit', function(e){ e.preventDefault(); if(!currentUser){ alert('Login first'); return; } if(!isFull && records.length >= TRIAL_LIMIT){ if(confirm('Trial limit reached. Do you want to enter activation key now?')) promptActivate(); return; } const rec = { dateTransmitted: dateTransmitted.value, personName: personName.value, title: title.value, dateReceived: dateReceived.value, remarks: remarks.value }; const idx = editIndex.value; if(idx==='') records.push(rec); else { records[Number(idx)] = rec; editIndex.value=''; } saveAll(); renderAll(); this.reset(); });
+
+function editRecord(i){ const r = records[i]; dateTransmitted.value = r.dateTransmitted||''; personName.value = r.personName||''; title.value = r.title||''; dateReceived.value = r.dateReceived||''; remarks.value = r.remarks||''; editIndex.value = i; }
+function deleteRecord(i){ if(!confirm('Delete this record?')) return; records.splice(i,1); saveAll(); renderAll(); }
+function archiveRecord(i){ const rec = records.splice(i,1)[0]; archived.push(rec); saveAll(); renderAll(); }
+function restoreRecord(i){ const rec = archived.splice(i,1)[0]; records.push(rec); saveAll(); renderAll(); }
+function deleteArchived(i){ if(!confirm('Permanently delete archived record?')) return; archived.splice(i,1); saveAll(); renderAll(); }
+
+/* activation */
+function promptActivate(){ if(!currentUser){ alert('Login first'); return; } const key = prompt('Enter your unique activation key (get from admin):'); if(!key) return; const correct = generateActivationKey(currentUser); if(key === correct){ isFull = true; saveAll(); alert('✅ Full version activated.'); updateFreeInfo(); } else alert('❌ Invalid activation key.'); }
+
+/* admin tools */
+function generateAndShowKey(){ const t = document.getElementById('adminTargetName').value.trim(); if(!t){ alert('Enter target user'); return; } const key = generateActivationKey(t.toUpperCase()); document.getElementById('adminKeyOutput').textContent = `Activation key for ${t.toUpperCase()}: ${key}`; }
+function exportUserData(){ if(currentUser !== ADMIN_NAME){ alert('Admin only'); return; } const t = document.getElementById('adminTargetName').value.trim().toUpperCase(); if(!t){ alert('Enter target user'); return; } const data = { records: JSON.parse(localStorage.getItem(`records_${t}`) || '[]'), archived: JSON.parse(localStorage.getItem(`archived_${t}`) || '[]'), fullVersion: JSON.parse(localStorage.getItem(`fullVersion_${t}`) || 'false') }; const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${t}_data.json`; a.click(); URL.revokeObjectURL(url); }
+
+/* reset current user */
+function showResetUserConfirm(){ if(!currentUser) return alert('Login first'); if(confirm('Reset this user data and trial?')){ localStorage.removeItem(storageKey('records')); localStorage.removeItem(storageKey('archived')); localStorage.removeItem(storageKey('fullVersion')); records=[]; archived=[]; isFull=false; saveAll(); renderAll(); alert('User data cleared. Trial restored.'); } }
+
+/* Forgot Password flow */
+function showForgot(){ loginBox.style.display='none'; forgotBox.style.display='block'; document.getElementById('forgotStep1').style.display='block'; document.getElementById('forgotStep2').style.display='none'; document.getElementById('forgotStep3').style.display='none'; forgotMsg.textContent=''; document.getElementById('forgotName').value=''; document.getElementById('fq1a').value=''; document.getElementById('fq2a').value=''; document.getElementById('fq3a').value=''; document.getElementById('forgotNewPass').value=''; document.getElementById('forgotNewPass2').value=''; }
+function cancelForgot(){ forgotBox.style.display='none'; loginBox.style.display='block'; forgotMsg.textContent=''; }
+
+/* step1: enter username */
+function startForgot(){
+  const n = document.getElementById('forgotName').value.trim();
+  if(!n){ forgotMsg.textContent='Enter your name'; return; }
+  const U = n.toUpperCase();
+  const users = loadUsers();
+  if(!users[U]){ forgotMsg.textContent='No such user'; return; }
+
+  // populate questions
+  const qs = users[U].secQuestions;
+  document.getElementById('fq1').textContent = '1) ' + qs[0];
+  document.getElementById('fq2').textContent = '2) ' + qs[1];
+  document.getElementById('fq3').textContent = '3) ' + qs[2];
+
+  // save temp target
+  window.__forgot_target = U;
+  document.getElementById('forgotStep1').style.display='none';
+  document.getElementById('forgotStep2').style.display='block';
+  forgotMsg.textContent='';
+}
+
+/* step2: verify answers */
+function verifySecurityAnswers(){
+  const users = loadUsers();
+  const U = window.__forgot_target;
+  if(!U){ forgotVerifyMsg.textContent='Start over'; return; }
+  const u = users[U];
+  const a1 = document.getElementById('fq1a').value.trim().toLowerCase();
+  const a2 = document.getElementById('fq2a').value.trim().toLowerCase();
+  const a3 = document.getElementById('fq3a').value.trim().toLowerCase();
+  if(!a1||!a2||!a3){ document.getElementById('forgotVerifyMsg').textContent='Answer all questions'; return; }
+
+  const h1 = hashString(a1), h2 = hashString(a2), h3 = hashString(a3);
+  if(h1 === u.secAnswersHash[0] && h2 === u.secAnswersHash[1] && h3 === u.secAnswersHash[2]) {
+    // allow set new password
+    document.getElementById('forgotStep2').style.display='none';
+    document.getElementById('forgotStep3').style.display='block';
+    document.getElementById('forgotVerifyMsg').textContent='';
+  } else {
+    document.getElementById('forgotVerifyMsg').textContent='Answers do not match. Try again.';
+  }
+}
+
+/* step3: save new password */
+function saveForgotNewPassword(){
+  const p1 = document.getElementById('forgotNewPass').value;
+  const p2 = document.getElementById('forgotNewPass2').value;
+  if(!p1 || !p2){ document.getElementById('forgotSaveMsg').textContent='Fill both fields'; return; }
+  if(p1 !== p2){ document.getElementById('forgotSaveMsg').textContent='Passwords do not match'; return; }
+
+  const users = loadUsers();
+  const U = window.__forgot_target;
+  if(!U){ document.getElementById('forgotSaveMsg').textContent='Start over'; return; }
+  users[U].passwordHash = hashString(p1);
+  saveUsers(users);
+  alert('Password updated. Please login with your new password.');
+  // cleanup & go back to login
+  window.__forgot_target = null;
+  cancelForgot();
+}
+
+/* admin convenience: full reset (kept for admin; change/secure as needed) */
+function adminFullReset(){
+  const pass = prompt('Enter admin password to clear all data:');
+  if(pass !== 'ROMULOADMIN'){ alert('Wrong admin password'); return; }
+  if(confirm('This will delete ALL users and data from this browser. Continue?')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+/* admin generate & export */
+function generateAndShowKey(){ const t = document.getElementById('adminTargetName').value.trim(); if(!t){ alert('Enter target user'); return; } const key = generateActivationKey(t.toUpperCase()); document.getElementById('adminKeyOutput').textContent = `Activation key for ${t.toUpperCase()}: ${key}`; }
+function exportUserData(){ if(currentUser !== ADMIN_NAME){ alert('Admin only'); return; } const t = document.getElementById('adminTargetName').value.trim().toUpperCase(); if(!t){ alert('Enter target user'); return; } const data = { records: JSON.parse(localStorage.getItem(`records_${t}`) || '[]'), archived: JSON.parse(localStorage.getItem(`archived_${t}`) || '[]'), fullVersion: JSON.parse(localStorage.getItem(`fullVersion_${t}`) || 'false') }; const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${t}_data.json`; a.click(); URL.revokeObjectURL(url); }
+
+/* auto-login last user */
+(function bootstrap(){
+  const last = localStorage.getItem('docTrackerUser');
+  if(last){
+    currentUser = last;
+    records = JSON.parse(localStorage.getItem(storageKey('records')) || '[]');
+    archived = JSON.parse(localStorage.getItem(storageKey('archived')) || '[]');
+    isFull = JSON.parse(localStorage.getItem(storageKey('fullVersion')) || 'false');
+    loginBox.style.display='none';
+    registerBox.style.display='none';
+    forgotBox.style.display='none';
+    appBox.style.display='block';
+    welcomeEl.textContent = `👤 Logged in as: ${currentUser}`;
+    document.getElementById('adminTools').style.display = (currentUser === ADMIN_NAME) ? 'block' : 'none';
+    renderAll();
+  }
+})();
+</script>
+</body>
+</html>
